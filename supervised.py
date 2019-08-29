@@ -1,6 +1,7 @@
 from common import *
 import sys
 
+batch_size = 2048
 use_small = False
 if len(sys.argv) > 1:
     if sys.argv[1] == "small":
@@ -8,11 +9,11 @@ if len(sys.argv) > 1:
         use_small = True
 
 s = "-small" if use_small else ""
-boards = torch.load("proc/boards{}.pt".format(s)).type(
+boards_all = torch.load("proc/boards{}.pt".format(s)).type(
     torch.float).to(get_device())
-meta = torch.load("proc/meta{}.pt".format(s)).type(
+meta_all = torch.load("proc/meta{}.pt".format(s)).type(
     torch.float).to(get_device())
-actions = torch.load("proc/actions{}.pt".format(s)).to(get_device())
+actions_all = torch.load("proc/actions{}.pt".format(s)).to(get_device())
 print("loaded proc")
 
 model = PolicyModel().to(get_device())
@@ -21,8 +22,15 @@ opt = optim.Adam(model.parameters())
 
 for epoch in range(1000000):
     print("Epoch {}".format(epoch))
-    loss = train(model, criterion, opt, boards, meta, actions)
-    print("Loss: {:.6f}".format(loss.item()))
+    running_loss = 0
+    for batch_idx in range(0, boards_all.shape[0], batch_size):
+        boards = boards_all[batch_idx:batch_idx+batch_size]
+        meta = meta_all[batch_idx:batch_idx+batch_size]
+        actions = actions_all[batch_idx:batch_idx+batch_size]
+        loss = train(model, criterion, opt, boards, meta, actions)
+        running_loss += loss
+
+    print("Loss: {:.6f}".format(running_loss.item()))
 
     if epoch % 100 == 0:
         pred = model(boards, meta)
@@ -31,18 +39,3 @@ for epoch in range(1000000):
         print()
 
     torch.save(model.state_dict(), "models/supervised.pt")
-
-    #board = chess.Board(states[3])
-    #b, meta = states_to_tensor([states[3]])
-    #action_v = model(b, meta)
-    #action = action_v.argmax().item()
-    #print(board)
-    #move = chess.Move(action // 64, action % 64)
-    #if board.is_legal(move):
-    #    board.push(move)
-    #else:
-    #    print("not legal:", move)
-    #print(board)
-    #print()
-    #print()
-
