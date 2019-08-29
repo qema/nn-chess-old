@@ -1,4 +1,11 @@
 from common import *
+import sys
+
+vs_pc = False
+if len(sys.argv) > 1:
+    if "pc" in sys.argv:
+        print("Computer opponent")
+        vs_pc = True
 
 def input_move(board):
     done = False
@@ -14,6 +21,9 @@ def input_move(board):
 model = PolicyModel().to(get_device())
 model.load_state_dict(torch.load("models/reinforce.pt"))
 
+opp_model = PolicyModel().to(get_device())
+opp_model.load_state_dict(torch.load("models/reinforce.pt"))
+
 board = chess.Board()
 for epoch in range(10000):
     my_side = epoch % 2 == 0
@@ -23,7 +33,11 @@ for epoch in range(10000):
         if board.turn == my_side:
             move = choose_move(board, model, 0)
         else:
-            move = input_move(board)
+            if vs_pc:
+                move = choose_move(board, opp_model, 0)
+                input()
+            else:
+                move = input_move(board)
         board.push(move)
         print(board)
         print()

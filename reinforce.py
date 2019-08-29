@@ -6,7 +6,6 @@ import queue
 
 game_batch_size = 10
 max_recent_opps = 10000
-reward_dict = {"1-0": 1, "0-1": -1, "1/2-1/2": 0}
 
 def train(model, opt, criterion, boards, metas, actions, reward):
     model.zero_grad()
@@ -34,10 +33,7 @@ def run_game(process_idx, queue, model, opp_model, epoch):
             move = choose_move(board, opp_model, 0)
         board.push(move)
 
-    result = board.result()
-    reward = reward_dict[result]
-    if not my_side:
-        reward *= -1
+    reward = reward_for_side(board, my_side)
     rewards += [reward]*n_moves
 
     queue.put((moves, states, rewards))
@@ -47,6 +43,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         if sys.argv[1] == "mp":
             print("Using multiprocessing")
+            print("warning: not working")
             use_mp = True
 
     model = PolicyModel().to(get_device())

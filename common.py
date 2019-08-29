@@ -5,6 +5,45 @@ import torch.nn as nn
 import torch.optim as optim
 import random
 
+reward_dict = {"1-0": 1, "0-1": -1, "1/2-1/2": 0}
+def reward_for_side(board, side):
+    result = board.result()
+    reward = reward_dict[result]
+    if not side:
+        reward *= -1
+    return reward
+
+class ValueModel(nn.Module):
+    def __init__(self):
+        super(ValueModel, self).__init__()
+        self.conv1 = nn.Conv2d(12, 20, 2)
+        self.relu1 = nn.ReLU()
+        self.conv2 = nn.Conv2d(20, 20, 2)
+        self.relu2 = nn.ReLU()
+        self.conv3 = nn.Conv2d(20, 20, 2)
+        self.relu3 = nn.ReLU()
+        self.fc1 = nn.Linear(508, 256)
+        self.relu4 = nn.ReLU()
+        self.fc2 = nn.Linear(256, 512)
+        self.relu5 = nn.ReLU()
+        self.fc3 = nn.Linear(512, 1)
+
+    def forward(self, board, meta):
+        out = self.conv1(board)
+        out = self.relu1(out)
+        out = self.conv2(out)
+        out = self.relu2(out)
+        out = self.conv3(out)
+        out = self.relu3(out)
+        out = out.view(out.shape[0], -1)
+        out = torch.cat((out, meta), dim=1)
+        out = self.fc1(out)
+        out = self.relu4(out)
+        out = self.fc2(out)
+        out = self.relu5(out)
+        out = self.fc3(out)
+        return out
+
 class PolicyModel(nn.Module):
     def __init__(self):
         super(PolicyModel, self).__init__()
@@ -143,15 +182,9 @@ def choose_move(board, model, eps):
         pred = pred[0][valid_idxs]
         actions = torch.distributions.Categorical(logits=pred)
         move = legal_moves[actions.sample().item()]
+        if move.promotion is not None:
+            move.promotion = 5
     return move
-
-def train(model, criterion, opt, board, meta, action):
-    model.zero_grad()
-    pred = model(board, meta)
-    loss = criterion(pred, action)
-    loss.backward()
-    opt.step()
-    return loss
 
 if __name__ == "__main__":
     # test stuff only

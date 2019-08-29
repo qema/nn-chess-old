@@ -1,6 +1,14 @@
 from common import *
 import sys
 
+def train(model, criterion, opt, board, meta, action):
+    model.zero_grad()
+    pred = model(board, meta)
+    loss = criterion(pred, action)
+    loss.backward()
+    opt.step()
+    return loss
+
 batch_size = 4096
 use_small = False
 if len(sys.argv) > 1:
