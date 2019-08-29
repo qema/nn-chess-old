@@ -81,7 +81,8 @@ if __name__ == "__main__":
         boards = boards.type(torch.float)
         metas = metas.type(torch.float)
         actions = actions_to_tensor(moves)
-        rewards = torch.tensor(rewards, dtype=torch.float)
+        rewards = torch.tensor(rewards, dtype=torch.float,
+            device=get_device())
         loss = train(model, opt, criterion, boards, metas, actions, rewards)
         print("Loss: {:.6f}".format(loss.item()))
         print()
