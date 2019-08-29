@@ -173,9 +173,9 @@ def choose_move(board, model, eps):
     if random.random() < eps:
         move = random.choice(legal_moves)
     else:
-        board_t, meta_t = states_to_tensor([board.fen()]).to(get_device())
-        board_t = board_t.type(torch.float)
-        meta_t = meta_t.type(torch.float)
+        board_t, meta_t = states_to_tensor([board.fen()])
+        board_t = board_t.type(torch.float).to(get_device())
+        meta_t = meta_t.type(torch.float).to(get_device())
         pred = model(board_t, meta_t)
 
         valid_idxs = [move_to_action_idx(move) for move in legal_moves]
