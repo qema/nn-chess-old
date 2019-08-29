@@ -1,7 +1,7 @@
 from common import *
 import sys
 
-batch_size = 2048
+batch_size = 4096
 use_small = False
 if len(sys.argv) > 1:
     if sys.argv[1] == "small":
