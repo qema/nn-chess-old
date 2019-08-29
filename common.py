@@ -8,15 +8,17 @@ import random
 class PolicyModel(nn.Module):
     def __init__(self):
         super(PolicyModel, self).__init__()
-        self.conv1 = nn.Conv2d(12, 10, 2)
+        self.conv1 = nn.Conv2d(12, 20, 2)
         self.relu1 = nn.ReLU()
-        self.conv2 = nn.Conv2d(10, 10, 2)
+        self.conv2 = nn.Conv2d(20, 20, 2)
         self.relu2 = nn.ReLU()
-        self.conv3 = nn.Conv2d(10, 10, 2)
+        self.conv3 = nn.Conv2d(20, 20, 2)
         self.relu3 = nn.ReLU()
-        self.fc1 = nn.Linear(258, 256)
+        self.fc1 = nn.Linear(508, 256)
         self.relu4 = nn.ReLU()
-        self.fc2 = nn.Linear(256, 64*64)
+        self.fc2 = nn.Linear(256, 512)
+        self.relu5 = nn.ReLU()
+        self.fc3 = nn.Linear(512, 64*64)
         self.softmax = nn.LogSoftmax(dim=1)
 
     def forward(self, board, meta):
@@ -31,6 +33,8 @@ class PolicyModel(nn.Module):
         out = self.fc1(out)
         out = self.relu4(out)
         out = self.fc2(out)
+        out = self.relu5(out)
+        out = self.fc3(out)
         out = self.softmax(out)
         return out
 

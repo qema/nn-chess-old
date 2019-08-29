@@ -19,15 +19,16 @@ model = PolicyModel().to(get_device())
 criterion = nn.NLLLoss()
 opt = optim.Adam(model.parameters())
 
-for epoch in range(100000):
+for epoch in range(1000000):
     print("Epoch {}".format(epoch))
     loss = train(model, criterion, opt, boards, meta, actions)
     print("Loss: {:.6f}".format(loss.item()))
 
-    pred = model(boards, meta)
-    print("Train acc: {:.4f}".format(
-        (pred.argmax(dim=1) == actions).sum().item() / len(actions)))
-    print()
+    if epoch % 100 == 0:
+        pred = model(boards, meta)
+        print("Train acc: {:.4f}".format(
+            (pred.argmax(dim=1) == actions).sum().item() / len(actions)))
+        print()
 
     torch.save(model.state_dict(), "models/supervised.pt")
 
