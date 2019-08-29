@@ -1,8 +1,18 @@
 from common import *
+import sys
 
-boards = torch.load("proc/boards-small.pt").type(torch.float).to(get_device())
-meta = torch.load("proc/meta-small.pt").type(torch.float).to(get_device())
-actions = torch.load("proc/actions-small.pt").to(get_device())
+use_small = False
+if len(sys.argv) > 1:
+    if sys.argv[1] == "small":
+        print("Using small data")
+        use_small = True
+
+s = "-small" if use_small else ""
+boards = torch.load("proc/boards{}.pt".format(s)).type(
+    torch.float).to(get_device())
+meta = torch.load("proc/meta{}.pt".format(s)).type(
+    torch.float).to(get_device())
+actions = torch.load("proc/actions{}.pt".format(s)).to(get_device())
 print("loaded proc")
 
 model = PolicyModel().to(get_device())
