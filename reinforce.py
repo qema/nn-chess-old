@@ -43,13 +43,17 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         if sys.argv[1] == "mp":
             print("Using multiprocessing")
-            print("warning: not working")
+            #print("warning: not working")
             use_mp = True
 
+    mp.set_start_method("spawn")
+
     model = PolicyModel().to(get_device())
+    model.share_memory()
     model.load_state_dict(torch.load("models/supervised.pt"))
 
     opp_model = PolicyModel().to(get_device())
+    opp_model.share_memory()
     opp_model.load_state_dict(torch.load("models/supervised.pt"))
     opp_model_pool = []
 
@@ -61,14 +65,23 @@ if __name__ == "__main__":
         # play n games
         moves, states, rewards = [], [], []
         with torch.no_grad():
-            if not use_mp:
+            if not use_mp:  # synchronous
                 q = queue.Queue()
                 for n in range(game_batch_size):
                     run_game(0, q, model, opp_model, epoch)
-            else:
+            else:           # use multiprocessing
                 q = mp.Queue()
-                mp.spawn(run_game, args=(q, model, opp_model, epoch),
-                    nprocs=game_batch_size)
+                processes = []
+                for n in range(game_batch_size):
+                    p = mp.Process(target=run_game,
+                        args=(0, q, model, opp_model, epoch))
+                    p.start()
+                    processes.append(p)
+
+                for p in processes:
+                    p.join()
+                #mp.spawn(run_game, args=(q, model, opp_model, epoch),
+                #    nprocs=game_batch_size)
 
             while not q.empty():
                 m, s, r = q.get()
