@@ -19,10 +19,12 @@ def input_move(board):
     return move
 
 model = PolicyModel().to(get_device())
-model.load_state_dict(torch.load("models/reinforce.pt"))
+model.load_state_dict(torch.load("models/reinforce.pt",
+    map_location=get_device()))
 
 opp_model = PolicyModel().to(get_device())
-opp_model.load_state_dict(torch.load("models/reinforce.pt"))
+opp_model.load_state_dict(torch.load("models/reinforce.pt",
+    map_location=get_device()))
 
 board = chess.Board()
 for epoch in range(10000):

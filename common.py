@@ -6,6 +6,7 @@ import torch.optim as optim
 import random
 
 reward_dict = {"1-0": 1, "0-1": -1, "1/2-1/2": 0}
+# precond: game is over
 def reward_for_side(board, side):
     result = board.result()
     reward = reward_dict[result]
