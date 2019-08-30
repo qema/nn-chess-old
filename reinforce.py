@@ -4,9 +4,10 @@ import torch.multiprocessing as mp
 import sys
 import queue
 
+n_workers = 4
 game_batch_size = 64
 max_recent_opps = 10000
-pool_update_dur = 32#64
+pool_update_dur = 64
 
 def train(model, opt, criterion, boards, metas, actions, reward):
     model.zero_grad()
@@ -18,24 +19,25 @@ def train(model, opt, criterion, boards, metas, actions, reward):
     opt.step()
     return loss
 
-def run_game(game_num, queue, model, opp_model, epoch):
+def run_game(n_games, queue, model, opp_model, epoch):
     moves, states, rewards = [], [], []
-    board = chess.Board()
-    my_side = (epoch + game_num) % 2 == 0
-    n_moves = 0
-    while not board.is_game_over():
-        if board.turn == my_side:
-            move = choose_move(board, model, 0)
-            # record for replay
-            moves.append(move.uci())
-            states.append(board.fen())
-            n_moves += 1
-        else:
-            move = choose_move(board, opp_model, 0)
-        board.push(move)
+    for game_num in range(n_games):
+        board = chess.Board()
+        my_side = (epoch + game_num) % 2 == 0
+        n_moves = 0
+        while not board.is_game_over():
+            if board.turn == my_side:
+                move = choose_move(board, model, 0)
+                # record for replay
+                moves.append(move.uci())
+                states.append(board.fen())
+                n_moves += 1
+            else:
+                move = choose_move(board, opp_model, 0)
+            board.push(move)
 
-    reward = reward_for_side(board, my_side)
-    rewards += [reward]*n_moves
+        reward = reward_for_side(board, my_side)
+        rewards += [reward]*n_moves
 
     queue.put((moves, states, rewards))
 
@@ -70,14 +72,14 @@ if __name__ == "__main__":
         with torch.no_grad():
             if not use_mp:  # synchronous
                 q = queue.Queue()
-                for n in range(game_batch_size):
-                    run_game(n, q, model, opp_model, epoch)
+                run_game(game_batch_size, q, model, opp_model, epoch)
             else:           # use multiprocessing
                 q = mp.Queue()
                 processes = []
-                for n in range(game_batch_size):
+                for n in range(n_workers):
                     p = mp.Process(target=run_game,
-                        args=(n, q, model, opp_model, epoch))
+                        args=(game_batch_size // n_workers,
+                            q, model, opp_model, epoch))
                     p.start()
                     processes.append(p)
 
