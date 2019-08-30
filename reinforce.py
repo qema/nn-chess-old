@@ -6,7 +6,7 @@ import queue
 
 game_batch_size = 64
 max_recent_opps = 10000
-opponent_swap_dur = 4
+opponent_swap_dur = 16
 
 def train(model, opt, criterion, boards, metas, actions, reward):
     model.zero_grad()
