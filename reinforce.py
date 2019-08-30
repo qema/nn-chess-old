@@ -6,7 +6,7 @@ import queue
 
 game_batch_size = 64
 max_recent_opps = 10000
-opp_pool_dur = 64
+pool_update_dur = 32#64
 
 def train(model, opt, criterion, boards, metas, actions, reward):
     model.zero_grad()
@@ -18,10 +18,10 @@ def train(model, opt, criterion, boards, metas, actions, reward):
     opt.step()
     return loss
 
-def run_game(process_idx, queue, model, opp_model, epoch):
+def run_game(game_num, queue, model, opp_model, epoch):
     moves, states, rewards = [], [], []
     board = chess.Board()
-    my_side = epoch % 2 == 0
+    my_side = (epoch + game_num) % 2 == 0
     n_moves = 0
     while not board.is_game_over():
         if board.turn == my_side:
@@ -60,7 +60,7 @@ if __name__ == "__main__":
         map_location=get_device()))
     opp_model_pool = []
 
-    opt = optim.Adam(model.parameters(), lr=3e-5)
+    opt = optim.Adam(model.parameters(), lr=1e-4)
     criterion = nn.NLLLoss(reduction="none")
 
     for epoch in range(10000):
@@ -71,13 +71,13 @@ if __name__ == "__main__":
             if not use_mp:  # synchronous
                 q = queue.Queue()
                 for n in range(game_batch_size):
-                    run_game(0, q, model, opp_model, epoch)
+                    run_game(n, q, model, opp_model, epoch)
             else:           # use multiprocessing
                 q = mp.Queue()
                 processes = []
                 for n in range(game_batch_size):
                     p = mp.Process(target=run_game,
-                        args=(0, q, model, opp_model, epoch))
+                        args=(n, q, model, opp_model, epoch))
                     p.start()
                     processes.append(p)
 
@@ -105,7 +105,7 @@ if __name__ == "__main__":
 
         torch.save(model.state_dict(), "models/reinforce.pt")
 
-        if epoch % opp_pool_dur == 0:
+        if epoch % pool_update_dur == 0:
             opp_model_pool.append(model.state_dict())
             opp_model_pool = opp_model_pool[-max_recent_opps:]
 
