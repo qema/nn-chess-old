@@ -1,6 +1,7 @@
 from common import *
 import sys
 import numpy as np
+from scipy.stats import ttest_1samp
 
 model = PolicyModel().to(get_device())
 model.load_state_dict(torch.load("models/reinforce.pt",
@@ -24,6 +25,7 @@ for epoch in range(100):
         board.push(move)
         #print(board)
         #print()
+        #input()
 
     reward = reward_for_side(board, my_side)
     rewards.append(reward)
@@ -32,3 +34,5 @@ for epoch in range(100):
     board.reset()
 
 print("Average reward for RL: {:.6f}".format(np.mean(rewards)))
+print("Better than supervised with p={:.4f}".format(
+    ttest_1samp(rewards, 0)[1]))

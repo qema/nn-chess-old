@@ -13,7 +13,7 @@ def train(model, opt, criterion, boards, metas, actions, reward):
     pred = model(boards, metas)
     loss = criterion(pred, actions)
     loss *= reward
-    loss = torch.mean(loss)
+    loss = torch.sum(loss) / game_batch_size
     loss.backward()
     opt.step()
     return loss
@@ -60,7 +60,7 @@ if __name__ == "__main__":
         map_location=get_device()))
     opp_model_pool = []
 
-    opt = optim.Adam(model.parameters())
+    opt = optim.Adam(model.parameters(), lr=0.0001)
     criterion = nn.NLLLoss(reduction="none")
 
     for epoch in range(10000):
