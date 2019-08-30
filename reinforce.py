@@ -6,7 +6,7 @@ import queue
 
 game_batch_size = 64
 max_recent_opps = 10000
-opponent_swap_dur = 64
+opp_pool_dur = 64
 
 def train(model, opt, criterion, boards, metas, actions, reward):
     model.zero_grad()
@@ -105,8 +105,10 @@ if __name__ == "__main__":
 
         torch.save(model.state_dict(), "models/reinforce.pt")
 
-        if epoch % opponent_swap_dur == 0:
+        if epoch % opp_pool_dur == 0:
             opp_model_pool.append(model.state_dict())
             opp_model_pool = opp_model_pool[-max_recent_opps:]
-            params = random.choice(opp_model_pool)
-            opp_model.load_state_dict(params)
+
+        # pick random opponent out of pool
+        params = random.choice(opp_model_pool)
+        opp_model.load_state_dict(params)
