@@ -60,7 +60,7 @@ if __name__ == "__main__":
         map_location=get_device()))
     opp_model_pool = []
 
-    opt = optim.Adam(model.parameters(), lr=0.0001)
+    opt = optim.Adam(model.parameters(), lr=3e-5)
     criterion = nn.NLLLoss(reduction="none")
 
     for epoch in range(10000):

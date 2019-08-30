@@ -27,11 +27,12 @@ class GameTreeNode:
 
 class MCTS:
     def __init__(self, board, side, tree_policy, rollout_policy, value_model,
-        lamb, c_puct, n_thr):
+        lamb, beta, c_puct, n_thr):
         self.tree_policy = tree_policy
         self.rollout_policy = rollout_policy
         self.value_model = value_model
         self.lamb = lamb
+        self.beta = beta
         self.c_puct = c_puct
         self.n_thr = n_thr
 
@@ -102,7 +103,8 @@ class MCTS:
                 board_t = board_t.type(torch.float)
                 meta_t = meta_t.type(torch.float)
                 action_t = actions_to_tensor([cur.moves[idx]])[0]
-                p = self.tree_policy(board_t, meta_t)[0][action_t].item()
+                p = (self.tree_policy(board_t, meta_t)[0] * self.beta)[
+                    action_t].item()
                 cur.ps[idx] = p
                 
                 board = chess.Board(board_fen)
@@ -149,7 +151,8 @@ if __name__ == "__main__":
 
     board = chess.Board()
 
-    searcher = MCTS(board, tree_policy, rollout_policy, value_model, 1, 1, 10)
+    searcher = MCTS(board, True, tree_policy, rollout_policy, value_model,
+        1, 0.67, 1, 10)
     #searcher.game_tree_root.add_child("a2a3", 0.3, 0, 0, 2, 2)
     #searcher.game_tree_root.add_child("b2b3", 0.5, 0, 0, 1, 3)
     best_move = searcher.search(10)
