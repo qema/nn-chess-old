@@ -26,7 +26,7 @@ class GameTreeNode:
         self.children.append(GameTreeNode())
 
 class MCTS:
-    def __init__(self, board, tree_policy, rollout_policy, value_model,
+    def __init__(self, board, side, tree_policy, rollout_policy, value_model,
         lamb, c_puct, n_thr):
         self.tree_policy = tree_policy
         self.rollout_policy = rollout_policy
@@ -36,6 +36,8 @@ class MCTS:
         self.n_thr = n_thr
 
         self.board = chess.Board(board.fen())
+        self.my_side = side
+
         self.game_tree_root = GameTreeNode()
         for move in self.board.legal_moves:
             self.game_tree_root.add_child(move.uci(), 0, 0, 0, 0, 0)
@@ -64,7 +66,7 @@ class MCTS:
 
     # NB: modifies board
     def eval_node(self, board, node):
-        my_side = self.board.turn
+        my_side = self.my_side
 
         # value net
         board_t, meta_t = states_to_tensor([board.fen()])
