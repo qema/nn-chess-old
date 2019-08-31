@@ -58,6 +58,7 @@ def run_game(n_games, queue, model, opp_model, epoch):
                     done_idxs.add(n)
                     n_done += 1
                     reward = reward_for_side(board, n < n_games//2)
+                    #print(n, board.result(), reward)
                     rewards[n] += [reward]*len(moves[n])
 
                     queue.put((moves[n], states[n], rewards[n]))
@@ -95,13 +96,13 @@ if __name__ == "__main__":
 
     model = PolicyModel().to(get_device())
     model.share_memory()
-    model.load_state_dict(torch.load("models/supervised.pt",
-        map_location=get_device()))
+    #model.load_state_dict(torch.load("models/supervised.pt",
+    #    map_location=get_device()))
 
     opp_model = PolicyModel().to(get_device())
     opp_model.share_memory()
-    opp_model.load_state_dict(torch.load("models/supervised.pt",
-        map_location=get_device()))
+    #opp_model.load_state_dict(torch.load("models/supervised.pt",
+    #    map_location=get_device()))
     opp_model_pool = []
 
     opt = optim.Adam(model.parameters(), lr=1e-4)

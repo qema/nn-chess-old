@@ -8,8 +8,8 @@ model.load_state_dict(torch.load("models/reinforce.pt",
     map_location=get_device()))
 
 opp_model = PolicyModel().to(get_device())
-opp_model.load_state_dict(torch.load("models/supervised.pt",
-    map_location=get_device()))
+#opp_model.load_state_dict(torch.load("models/supervised.pt",
+#    map_location=get_device()))
 
 rewards = []
 board = chess.Board()
@@ -34,5 +34,5 @@ for epoch in range(100):
     board.reset()
 
 print("Average reward for RL: {:.6f}".format(np.mean(rewards)))
-print("Better than supervised with p={:.4f}".format(
+print("Different from supervised with p={:.4f}".format(
     ttest_1samp(rewards, 0)[1]))

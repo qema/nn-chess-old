@@ -16,10 +16,10 @@ with torch.no_grad():
         board = chess.Board()
         w_searcher = MCTS(board, True,
             tree_policy, rollout_policy, value_model,
-            0.9, 0.1, 10)
+            1, 1, 0.1, 10)
         b_searcher = MCTS(board, False,
             tree_policy, rollout_policy, value_model,
-            0.9, 0.1, 10)
+            1, 1, 0.1, 10)
         while not board.is_game_over():
             print(board)
             print()
